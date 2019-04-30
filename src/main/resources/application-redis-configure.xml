@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd ">
+	
+	<!-- 引入配置文件 -->  
+    <bean id="redis_propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="ignoreUnresolvablePlaceholders" value="true" />
+        <property name="locations">
+		  <value>classpath:redis.properties</value>
+		</property>
+    </bean>
+    
+	<!-- 启用组件注解扫描  -->
+	<context:component-scan base-package="com.asiainfo.redis.service" />
+
+    <!-- redisCluster 配置文件加载 -->  
+    <bean id="resourcePropertySource" class="org.springframework.core.io.support.ResourcePropertySource">
+		<constructor-arg name="name" value="redis.properties" />
+		<constructor-arg name="resource" value="classpath:redis.properties" />
+    </bean>
+    
+    <!-- redisCluster 节点配置 -->
+    <!-- spring.redis.cluster.nodes -->
+    <!-- spring.redis.cluster.max-redirects -->
+    <bean id="redisClusterConfiguration" class="org.springframework.data.redis.connection.RedisClusterConfiguration">
+        <constructor-arg name="propertySource" ref="resourcePropertySource" />
+    </bean>
+    
+    <!-- redisCluster 连接池配置-->
+    <!-- 使用 PropertyPlaceholderConfigurer -->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="${redis.maxIdle}" />
+        <property name="maxTotal" value="${redis.maxTotal}" />
+        <property name="maxWaitMillis" value="${redis.maxWait}" />
+        <property name="testOnBorrow" value="${redis.testOnBorrow}" />
+    </bean>
+
+    <!-- redisCluster 连接工厂 -->
+    <bean id="connectionFactory"  class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<constructor-arg name="clusterConfig" ref="redisClusterConfiguration" />
+		<constructor-arg name="poolConfig" ref="jedisPoolConfig" />
+		<property name="password" value="${redis.password}" />
+		<property name="timeout" value="${redis.timeout}" />
+	</bean>
+	
+	<!-- RedisTemplate 配置 -->
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="keySerializer">
+			<!-- <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" /> -->
+			<bean class="${spring.redis.serializer.key}" />
+		</property>
+		<property name="valueSerializer">
+			<!-- <bean class="com.asiainfo.redis.util.FastjsonRedisSerializer" /> -->
+			<!-- <bean class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer" /> -->
+			<bean class="${spring.redis.serializer.value}" />
+		</property>
+		<property name="hashKeySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="hashValueSerializer">
+			<bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+		</property>
+	</bean>
+</beans>
