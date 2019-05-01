@@ -1,4 +1,75 @@
-/**   
+/**  
+ *  Redis:
+    Redis是一个开源的内存中的数据结构存储系统，它可以用作：数据库、缓存和消息中间件。
+    Redis 内置了复制（Replication），LUA脚本（Lua scripting）， LRU驱动事件（LRU eviction），事务（Transactions） 和不同级别的磁盘持久化（Persistence），
+    并通过 Redis哨兵（Sentinel）和自动分区（Cluster）提供高可用性（High Availability）。
+    Redis本质上是一个Key-Value类型的内存数据库，整个数据库统统加载在内存当中进行操作，定期通过异步操作把数据库数据flush到硬盘上进行保存。
+    因为是纯内存操作，Redis的性能非常出色，每秒可以处理超过 10万次读写操作，是已知性能最快的Key-Value DB。
+    Redis支持保存多种数据结构（String、List、Set、Sorted Set、Hash），此外单个value的最大限制是1GB，可以对存入的Key-Value设置expire时间。
+    Redis的主要缺点是数据库容量受到物理内存的限制，不能用作海量数据的高性能读写，因此Redis适合的场景主要局限在较小数据量的高性能操作和运算上。
+    
+    Redis为什么这么快：
+    1、完全基于内存
+    2、数据结构简单
+    3、采用单线程，避免了不必要的上下文切换和竞争条件
+    4、使用多路I/O复用模型，非阻塞IO；
+    5、单线程的方式是无法发挥多核CPU 性能，不过我们可以通过在单机开多个Redis 实例来完善！
+    
+    Redis的优点：
+    1、速度快，因为数据存在内存中，类似于HashMap，HashMap的优势就是查找和操作的时间复杂度都是O(1)
+    2、支持丰富数据类型，支持string，list，set，sorted set，hash
+    3、支持事务，操作都是原子性，所谓的原子性就是对数据的更改要么全部执行，要么全部不执行
+    4、丰富的特性：可用于缓存，消息，按key设置过期时间，过期后将会自动删除
+    5、Redis支持数据的备份，即master-slave模式的数据备份。
+    6、Redis支持数据的持久化，可以将内存中的数据保持在磁盘中，重启的时候可以再次加载进行使用。
+    
+    适用场景：
+    会话缓存（Session Cache）：最常用的一种使用Redis的情景是会话缓存（session cache）。
+      用Redis缓存会话比其他存储（如Memcached）的优势在于：Redis提供持久化。Redis并不能保证数据的强一致性，适用于维护一个不是严格要求一致性的缓存。
+    队列：Reids在内存存储引擎领域的一大优点是提供 list 和 set 操作，这使得Redis能作为一个很好的消息队列平台来使用。
+    排行榜/计数器：Redis在内存中对数字进行递增或递减的操作实现的非常好。集合（Set）和有序集合（Sorted Set）也使得我们在执行这些操作的时候变的非常简单。
+    发布/订阅: 使用较少
+    
+    Redis分布式锁：
+    先拿setnx来争抢锁，抢到之后，再用expire给锁加一个过期时间防止锁忘记了释放。
+    如果在setnx之后执行expire之前进程意外crash或者要重启维护了，那会怎么样？
+    set指令有非常复杂的参数，这个应该是可以同时把setnx和expire合成一条指令来用的！
+    
+    Redis秒杀：
+    incrby key -1 返回结果大于等于0算拍到。
+    
+    Redis持久化：
+    持久化就是把内存的数据写到磁盘中去，防止服务宕机了内存数据丢失。
+    Redis 提供了两种持久化方式:RDB（默认） 和AOF 。
+    RDB：Redis DataBase，功能核心函数rdbSave(生成RDB文件)和rdbLoad（从文件加载内存）。
+    AOF：redis 写命令日志。
+    1、aof文件比rdb更新频率高，优先使用aof还原数据。
+    2、aof比rdb更安全也更大
+    3、rdb性能比aof好
+    4、如果两个都配了优先加载AOF
+    
+    Redis哈希槽：
+    Redis集群没有使用一致性hash,而是引入了哈希槽的概念，Redis集群有16384个哈希槽，每个key通过CRC16校验后对16384取模来决定放置哪个槽，集群的每个节点负责一部分hash槽。
+    
+    Redis事务：
+    事务是一个单独的隔离操作：事务中的所有命令都会序列化、按顺序地执行。事务在执行的过程中，不会被其他客户端发送来的命令请求所打断。
+    事务是一个原子操作，事务中的命令要么全部被执行，要么全部都不执行。
+
+
+    Redis cluster
+    1. 所有的redis节点彼此互联(PING-PONG机制), 内部使用二进制协议优化传输速度和带宽.
+    2. 节点的fail是通过集群中超过半数的master节点检测失效时才生效.
+    3. 客户端与redis节点直连, 不需要中间proxy层; 客户端不需要连接集群所有节点, 连接集群中任何一个可用节点即可
+    4. redis-cluster把所有的物理节点映射到[0-16383]slot上, cluster 负责维护node<->slot<->key
+    
+    Redis cluster 选举
+    1. 选举过程是集群中所有master参与, 如果半数以上master节点与故障节点通信超过(cluster-node-timeout), 认为该节点故障, 自动触发故障转移操作.
+    2. 什么时候整个集群不可用(cluster_state:fail)? 
+       a. 如果集群任意master挂掉, 且当前master没有slave. 集群进入fail状态, 也可以理解成集群的slot映射[0-16383]不完整时进入fail状态.
+       b. 如果集群超过半数以上master挂掉，无论是否有slave集群进入fail状态.
+    ps: 当集群不可用时, 所有对集群的操作做都不可用，收到((error) CLUSTERDOWN The cluster is down)错误.
+
+************************************************************************************************************************
  - Jedis 实现与节点的连接、命令传输、返回结果读取
  - Jedis extends BinaryJedis, Jedis持有Pool对象，在close时，如果Pool不为空则，释放会缓存池中
     protected Pool<Jedis> dataSource = null;
