@@ -28,7 +28,7 @@ public class DistributeLock {
         DistributeLock dl = new DistributeLock();
         JedisCluster jc = null;
         try {
-            jc = JedisClusterFactory.instance().getJedisCluster(CLUSTER_NODES);
+            jc = JedisClusterFactory.getInstance().getJedisCluster(CLUSTER_NODES);
             // acquireLock
             String lock = dl.acquireLock(jc, LOCK_KEY);
             dl.acquireLock(jc, LOCK_KEY);

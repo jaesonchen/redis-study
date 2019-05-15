@@ -21,7 +21,7 @@ public class ClientApplication {
         
         JedisCluster jc = null;
         try {
-            jc = JedisClusterFactory.instance().getJedisCluster(CLUSTER_NODES);
+            jc = JedisClusterFactory.getInstance().getJedisCluster(CLUSTER_NODES);
             System.out.println(jc.get("10001"));
         } finally {
             IOUtils.closeQuietly(jc);

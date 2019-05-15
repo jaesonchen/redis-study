@@ -6,7 +6,7 @@ import com.asiainfo.redis.util.JedisClusterFactory;
 import redis.clients.jedis.JedisCluster;
 
 /**   
- * IdGenerator 分布式id生成器，jedis.incr(key)
+ * IdGenerator 分布式id生成器，jedis.incr(key) / jedis.incrBy(key, long)
  * 
  * @author chenzq  
  * @date 2019年4月27日 下午5:47:34
@@ -21,7 +21,7 @@ public class IdGenerator {
     public static void main(String[] args) {
         JedisCluster jc = null;
         try {
-            jc = JedisClusterFactory.instance().getJedisCluster(CLUSTER_NODES);
+            jc = JedisClusterFactory.getInstance().getJedisCluster(CLUSTER_NODES);
             // incr
             for (int i = 0; i < 100; i++) {
                 jc.incr(KEY);

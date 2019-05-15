@@ -51,7 +51,7 @@ public class JedisTransaction {
 
         JedisCluster jc = null;
         try {
-            jc = JedisClusterFactory.instance().getJedisCluster(CLUSTER_NODES);
+            jc = JedisClusterFactory.getInstance().getJedisCluster(CLUSTER_NODES);
             JedisSlotBasedConnectionHandler handler = getFieldValue(jc, FIELD_CONNECTION_HANDLER);
             JedisClusterInfoCache cache = getFieldValue(handler, FIELD_INFO_CACHE);
             Jedis jedis = cache.getSlotPool(JedisClusterCRC16.getSlot(WATCH_KEY)).getResource();

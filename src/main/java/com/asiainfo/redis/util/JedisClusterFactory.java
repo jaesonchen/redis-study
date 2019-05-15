@@ -21,13 +21,18 @@ public class JedisClusterFactory {
         private static JedisClusterFactory instance = new JedisClusterFactory();
     }
     
-    public static JedisClusterFactory instance() {
+    public static JedisClusterFactory getInstance() {
         return JedisClusterFactoryHolder.instance;
     }
     
-    // 获取JedisCluster连接
+    /**
+     * @Description: 获取JedisCluster连接
+     * @author chenzq
+     * @date 2019年5月9日 下午2:47:40
+     * @param clusterNodes
+     * @return
+     */
     public JedisCluster getJedisCluster(String clusterNodes) {
-        
         JedisCluster jc = null;
         try {
             // Jedis连接池配置，基于common-pool2

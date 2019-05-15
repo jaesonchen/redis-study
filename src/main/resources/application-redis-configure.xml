@@ -9,17 +9,12 @@
 		http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context 
 		http://www.springframework.org/schema/context/spring-context.xsd ">
-	
-	<!-- 引入配置文件 -->  
-    <bean id="redis_propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="ignoreUnresolvablePlaceholders" value="true" />
-        <property name="locations">
-		  <value>classpath:redis.properties</value>
-		</property>
-    </bean>
-    
-	<!-- 启用组件注解扫描  -->
-	<context:component-scan base-package="com.asiainfo.redis.service" />
+
+    <!-- 启用组件注解扫描  -->
+    <context:component-scan base-package="com.asiainfo.redis.service" />
+    	
+    <!-- 配置redis相关参数properties的属性：${} -->
+    <context:property-placeholder location="classpath:redis.properties" />
 
     <!-- redisCluster 配置文件加载 -->  
     <bean id="resourcePropertySource" class="org.springframework.core.io.support.ResourcePropertySource">
